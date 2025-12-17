@@ -1,21 +1,34 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useCoinsStore } from "../store/coinsStore";
+import {valueOrDefault} from "chart.js/helpers";
 
 const coinStore = useCoinsStore();
 
 const sortBy = ref(null);
+const sortOrder = ref(null);
 
 const sortedCoins = computed(() => {
   const coins = [...coinStore.coinDataTop50];
 
-  if (sortBy.value === "change") {
+  if (sortBy.value === "change" && sortOrder.value==="asc" ) {
     return coins.sort((a, b) => {
       return parseFloat(b.changePercent24Hr) - parseFloat(a.changePercent24Hr);
     });
-  } else if (sortBy.value === "volume") {
+  }
+  else if (sortBy.value === "change"&& sortOrder.value==="desc" ) {
+    return coins.sort((a, b) => {
+      return parseFloat(a.changePercent24Hr) - parseFloat(b.changePercent24Hr);
+    });
+  }
+  else if (sortBy.value === "volume"  && sortOrder.value==="asc") {
     return coins.sort((a, b) => {
       return parseFloat(b.volumeUsd24Hr) - parseFloat(a.volumeUsd24Hr);
+    });
+  }
+  else if (sortBy.value === "volume"  && sortOrder.value==="desc") {
+    return coins.sort((a, b) => {
+      return parseFloat(a.volumeUsd24Hr) - parseFloat(b.volumeUsd24Hr);
     });
   }
 
@@ -23,13 +36,21 @@ const sortedCoins = computed(() => {
 });
 
 const setSortBy = (criterion) => {
-  // Toggle off if clicking the same button
   if (sortBy.value === criterion) {
     sortBy.value = null;
   } else {
     sortBy.value = criterion;
   }
 };
+
+
+const setsortOrder = () => {
+  if (sortOrder.value === 'desc') {
+    sortOrder.value = 'asc';
+  } else
+    sortOrder.value = 'desc'
+};
+
 
 const formatNumber = (value) => {
   const num = Number(value);
@@ -49,6 +70,7 @@ const formatPrice = (price) => {
   if (num >= 0.01) return num.toFixed(4);
   return num.toFixed(8);
 };
+
 </script>
 
 <template>
@@ -56,7 +78,9 @@ const formatPrice = (price) => {
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-white font-bold text-3xl">Live Market</h1>
 
-      <!-- Sorting buttons -->
+      <input type="text" id="coin">
+
+
       <div class="flex gap-3">
         <button
             @click="setSortBy('change')"
@@ -81,10 +105,15 @@ const formatPrice = (price) => {
         >
           Sort by Volume 24h
         </button>
+
+        <select @change="setsortOrder">
+          <option value="asc">Descending</option>
+          <option value="desc">Ascending</option>
+        </select>
+
       </div>
     </div>
 
-    <!-- Table header -->
     <div class="grid grid-cols-5 gap-4 mt-[20px] text-gray-400 font-semibold pb-3 border-b border-gray-700">
       <p>Coin</p>
       <p>Change</p>
@@ -93,7 +122,6 @@ const formatPrice = (price) => {
       <p>Price</p>
     </div>
 
-    <!-- Scrollable coin list -->
     <div class="max-h-[400px] overflow-y-scroll">
       <div
           v-for="(coin, index) in sortedCoins"
@@ -120,21 +148,18 @@ const formatPrice = (price) => {
       </div>
     </div>
 
-    <!-- Active sort indicator -->
     <div v-if="sortBy" class="mt-4 text-gray-400 text-sm">
       <p>
         Currently sorted by:
         <span class="text-[#1ECB4F] font-semibold">
           {{ sortBy === 'change' ? 'Change %' : 'Volume 24h' }}
         </span>
-        (descending)
       </p>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Custom scrollbar styling */
 .overflow-y-scroll::-webkit-scrollbar {
   width: 8px;
 }
